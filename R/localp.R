@@ -16,6 +16,52 @@ Epa_K <- function(x) {
   return(y)
 }
 
+### total version
+est_t_VCM <- function(data,h=0.1,t,d=1){
+  n<- length(data)
+  p <- ncol(data[[1]])-2
+  mis <- sapply(data, function(x){nrow(x)})
+
+  totaldata  <- Reduce(rbind, data)
+
+  totalt <- totaldata[,1]
+
+  totalxp <- totaldata[,2:(p+1)]
+
+  totaly <- totaldata[,p+2]
+
+  totalxp_design <- matrix(0,nrow = nrow(totaldata), ncol= p*(d+1))
+  for(k in seq(1,by=d+1, length.out=p)){
+    for(i in 0:d)
+      totalxp_design[,k+i] <- totalxp[,(k-1)/(d+1)+1] * (totalt-t)^i
+  }
+
+  K_design <- diag(Epa_K((totalt-t)/h)/h/(rep(mis,mis)))
+
+  denominator <- solve(t(totalxp_design) %*% K_design %*% totalxp_design)
+
+  xt <- data_i[,1]
+  xp <- data_i[,2:(p+1)]
+  y <- data_i[, p+2]
+
+  xp_design <- matrix(0,nrow = length(y), ncol= p*(d+1))
+  for(k in seq(1,by=d+1, length.out=p)){
+    for(i in 0:d)
+      xp_design[,k+i] <- xp[,(k-1)/(d+1)+1] * (xt-t)^i
+  }
+
+  k_d <- diag(Epa_K((xt-t)/h)/h/length(y))
+
+  xi <- n * (denominator %*% t(xp_design) %*% k_d %*% y)[seq(1,by=d+1, length.out=p),]
+
+  return(xi)
+}
+
+
+
+
+
+### individual for VCM
 localp_t_VCM <- function(data_i,data,h=0.1,t,d=1){
   n<- length(data)
   p <- ncol(data[[1]])-2
