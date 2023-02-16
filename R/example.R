@@ -1,6 +1,5 @@
 
 
-
 covmatrix <- diag(c(1,1,1,1,1)); covmatrix[4,5] <- 0.5 ; covmatrix[5,4] <- 0.5
 
 t_points <- seq(0,1,0.1)
@@ -10,7 +9,8 @@ coef_list <- list(
   beta2 = function(t){cos(2*pi*t)},
   beta3 = function(t){sin(2*pi*t)},
   beta4 = function(t){4*t*(1-t)},
-  beta5 = function(t){0.4*(t-0.6)^2}
+  # beta5 = function(t){0.4*(t-0.6)^2}
+  beta5 = function(t){2*(t-0.6)^2}
 )
 
 
@@ -24,4 +24,11 @@ cov_list <- list(
 
 mean_list <- rep(list(function(x){0*x}),5)
 
-#VCMdata <- rp_VCM_generate(100,5, coef_list, mean_list, cov_list)
+
+#VCMdata <- rp_VCM_generate(50,5, coef_list, mean_list, cov_list)
+
+#VCM_inference(VCMdata,t_points = t_points)
+
+#
+#
+# est_VCM(VCMdata, t=t_points , h=0.1)-VCM_inference(VCMdata,t_points = t_points, h=0.1)$betahat
