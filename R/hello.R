@@ -1,3 +1,36 @@
+fourier_series <- function(k, coef, x) {
+  # Compute the values of the Fourier series at the given points
+  y <- apply(matrix(1:k, ncol = k), 2, function(j) {
+    cos_term <- cos(2 * pi * (j - 1) * x)
+    sin_term <- sin(2 * pi * (j - 1) * x)
+    coef[j] * cos_term + coef[j + k] * sin_term
+  })
+
+  # Return the values of the Fourier series
+  return(rowSums(y))
+}
+
+
+
+# KL-represent the covariance function
+KL_fourier <- funciton(t,s, k=50, nu = -2, scale = 1) {
+
+  seq_vec <- (1:k)^(nu) * scale
+
+  fourier_f <-
+
+}
+
+
+# Define the length of the sequence
+N <- 10
+
+# Initialize an empty vector to store the sequence
+
+sum(seq_vec)
+
+
+
 # Define the Epanechnikov kernel function
 Epa_K <- function(x) {
   # Use sapply to apply the function to each element of x
@@ -13,6 +46,8 @@ Epa_K <- function(x) {
   })
   return(y)
 }
+
+
 
 
 split_matrix_by_rows <- function(mat, lengths) {
