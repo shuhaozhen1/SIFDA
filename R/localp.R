@@ -1,5 +1,3 @@
-library(MASS)
-
 ### total version
 est_t_VCM <- function(data,h=0.1,t,d=1){
   n<- length(data)
