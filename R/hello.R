@@ -13,21 +13,22 @@ fourier_series <- function(k, coef, x) {
 
 
 # KL-represent the covariance function
-KL_fourier_cov <- function(t,s, k=50, nu = -2, scale = 1) {
-
-  seq_vec <- (1:k)^(nu) * scale
+KL_fourier_cov <- function(t,s) {
+  k<-100
+  seq_vec <- (1:k)^(-2)
 
   fourier_f <- sapply(1:k, function(i,x,y,c){
-    c[i] * (sin(pi*i *x) + cos(pi*i * x)) *  (sin(pi*i *y) + cos(pi*i * y))
+    c[i] * (sin(2*pi*i *x) + cos(2*pi*i * x)) *  (sin(2*pi*i *y) + cos(2*pi*i * y))
   },x=t,y=s,c=seq_vec)
 
   return(sum(fourier_f))
 
 }
 
+KL_fourier_cov(0.4,0.61)
 
 
-outer(seq(0,1,0.1), seq(0,1,0.1), Vectorize(KL_fourier_cov, c("x", "y")))
+outer(seq(0,1,0.1), KL_fourier_cov)
 
 outer(x,x, function(x,y){KL_fourier_cov(x,y,k=50, nu = -2, scale = 1)})
 
