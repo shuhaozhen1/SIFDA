@@ -113,7 +113,7 @@ rp_generate <- function(n,m,mean_list,cov_list,dis_vector=NULL,covmatrix=NULL,si
       })
   } else {
     p_error <- lapply(p_list, function(x){
-      x[,-1] <- x[,-1] + rnorm(1, sd= sig) * x[,2]/length(mean_list)
+      x[,-1] <- x[,-1] + rnorm(1, sd= sig) * x[,2]
       return(x)
     })
   }

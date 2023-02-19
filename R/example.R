@@ -13,6 +13,18 @@ coef_list <- list(
   beta5 = function(t){2*(t-0.6)^2}
 )
 
+cov1 <- function(x,y) {
+  k <- 100
+
+  fourier <- 0
+  for (i in 1:k) {
+    fourier <- fourier + i^(-2) * (sin(pi*i *x) + cos(pi*i * x)) *  (sin(pi*i *y) + cos(pi*i * y))
+  }
+
+  return(fourier)
+
+}
+
 
 cov_list <- list(
   x1 = function(t,s){2^(t/2+s/2-abs(t-s)/4)},
