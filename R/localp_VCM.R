@@ -154,21 +154,25 @@ localp_VCM_i <- function(data, h=0.1, t_points, d=1) {
 #' @importFrom MASS mvrnorm
 #' @export
 
-VCM_inference <- function(data, bstime=1000, h=NULL, t_points, d=1, alpha = 0.05){
+VCM_inference <- function(data, bstime=1000, h=NULL, h1=NULL, t_points, d=1, alpha = 0.05){
 
   n <- length(data)
   p <- ncol(data[[1]])-2
 
   if(is.null(h)){
     totalt <- Reduce(rbind,data)[,1]
-    h <- 1.2 * bw.bcv(totalt)
+    h <- bw.bcv(totalt)
   }
 
   betahat <- est_VCM(data = data, t_points = t_points, h=h, d=d)
 
   centerdata <- center_VCM(data = data, h=h,d=d)
 
-  xis <- localp_VCM_i(data=centerdata,h=h, t_points = t_points, d=d)
+  if(is.null(h1)){
+    h1 <- 0.8 * h
+  }
+
+  xis <- localp_VCM_i(data=centerdata,h=h1, t_points = t_points, d=d)
 
   xis_v <- lapply(xis, function(x){c(t(x))})
 
