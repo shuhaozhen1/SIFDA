@@ -1,21 +1,5 @@
 
 
-
-cov1 <- function(x,y) {
-  k <- 100
-
-  fourier <- 0
-  for (i in 1:k) {
-    fourier <- fourier + i^(-2) * (sin(pi*i *x) + cos(pi*i * x)) *  (sin(pi*i *y) + cos(pi*i * y))
-  }
-
-  return(fourier)
-
-}
-
-
-
-
 # Define the Epanechnikov kernel function
 Epa_K <- function(x) {
   # Use sapply to apply the function to each element of x

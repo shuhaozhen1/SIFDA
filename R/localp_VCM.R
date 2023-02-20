@@ -1,4 +1,3 @@
-### total version
 est_t_VCM <- function(data,h=0.1,t,d=1){
   n<- length(data)
   p <- ncol(data[[1]])-2
@@ -10,8 +9,6 @@ est_t_VCM <- function(data,h=0.1,t,d=1){
 
   totalxp <- totaldata[,2:(p+1)]
 
-  totaly <- totaldata[,p+2]
-
   h_design <- diag(rep(1,p)) %x% diag(h^(0:d))
 
   totalxp_design <- matrix(0,nrow = nrow(totaldata), ncol= p*(d+1))
@@ -22,16 +19,33 @@ est_t_VCM <- function(data,h=0.1,t,d=1){
 
   K_design <- diag(Epa_K((totalt-t)/h)/h/(rep(mis,mis)))
 
-  t_design <- totaldata[,p+2]
+  y_design <- totaldata[,p+2]
 
   est <- (solve(t(totalxp_design) %*% K_design %*% totalxp_design) %*%
-    t(totalxp_design) %*% K_design %*% t_design)[seq(1,by=d+1, length.out=p),]
+    t(totalxp_design) %*% K_design %*% y_design)[seq(1,by=d+1, length.out=p),]
 
   return(est)
 }
 
 
-### tpoints version
+#' @title Estimate the coefficients of a VCM model
+#' @description Given a list of data, estimate the coefficients of a VCM model at given time points
+#'
+#' @param data A list of data frames, each of which represents the observed data for one element.
+#' @param t_points A vector of time points at which to estimate the VCM coefficients.
+#' @param h The bandwidth for the Epanechnikov kernel. Default is 0.1.
+#' @param d The degree of the polynomial for the local linear regression. Default is 1.
+#'
+#' @return A matrix of estimated coefficients, with each row representing the estimated coefficients for one element.
+#'
+#' @examples
+#' data_list <- rp_VCM_generate(n=3,m=10,coef_list=list(f1,f2),mean_list=list(mean1,mean2),
+#'                     cov_list=list(cov1,cov2), sig=0.1)
+#' t_points <- seq(0, 1, by = 0.1)
+#' est <- est_VCM(data_list, t_points)
+#' est
+#'
+#' @export
 est_VCM <- function(data,t_points, h=0.1,d=1) {
   est <- sapply(t_points, est_t_VCM,h=h,d=d, data=data)
   return(est)
@@ -115,6 +129,31 @@ localp_VCM_i <- function(data, h=0.1, t_points, d=1) {
   return(xi)
 }
 
+
+#' @title Estimate and infer variance component model
+#'
+#' @description This function estimates the variance component model using local polynomial regression and performs inference for the coefficients.
+#'
+#' @param data A list of data frames, each containing data for one cluster.
+#' @param bstime Number of bootstrap samples for confidence interval estimation.
+#' @param h The bandwidth for the local polynomial regression. If NULL, the bandwidth will be chosen using cross-validation.
+#' @param t_points A vector of time points to evaluate the estimate.
+#' @param d The degree of the local polynomial regression.
+#' @param alpha The significance level for the confidence interval.
+#'
+#' @return A list containing the estimate of the coefficients (betahat), the lower and upper bounds of the confidence interval (low and up), the average bandwidth (band), and the estimated standard deviation (sd).
+#' \item{betahat}{An estimate of the coefficient functions at the specified time points.}
+#' \item{low}{The lower bound of the confidence band.}
+#' \item{up}{The upper bound of the confidence band.}
+#' \item{band}{The average width of the confidence band.}
+#' \item{sd}{The standard deviation of the estimated function.}
+#' @examples
+#' data(VCMdata)
+#' VCM_inference(data = VCMdata, bstime = 100, h = NULL, t_points = seq(0, 10, by = 0.1), d = 1, alpha = 0.05)
+#'
+#' @importFrom MASS mvrnorm
+#' @export
+
 VCM_inference <- function(data, bstime=1000, h=NULL, t_points, d=1, alpha = 0.05){
 
   n <- length(data)
@@ -129,15 +168,13 @@ VCM_inference <- function(data, bstime=1000, h=NULL, t_points, d=1, alpha = 0.05
 
   centerdata <- center_VCM(data = data, h=h,d=d)
 
-  xis <- localp_VCM_i(data=centerdata,h= 0.8*h, t_points = t_points, d=d)
+  xis <- localp_VCM_i(data=centerdata,h=h, t_points = t_points, d=d)
 
   xis_v <- lapply(xis, function(x){c(t(x))})
 
-  xismean <- Reduce('+',xis_v)/n
-
   xis2_ts <- lapply(xis_v, function(x){x %*% t(x)})
 
-  est_cov <- Reduce('+',xis2_ts)/n -  xismean %*% t(xismean)
+  est_cov <- Reduce('+',xis2_ts)/n
 
   est_sd <- sqrt(diag(est_cov))
 
@@ -153,8 +190,8 @@ VCM_inference <- function(data, bstime=1000, h=NULL, t_points, d=1, alpha = 0.05
   scb_low <- betahat - q_hat * est_sd / sqrt(n)
   scb_up <- betahat + q_hat * est_sd / sqrt(n)
 
-  return(list(betahat= betahat, scb_low=scb_low, scb_up=scb_up,
-              band= mean(scb_up-scb_low)/2, est_sd=est_sd))
+  return(list(betahat= betahat, low=scb_low, up=scb_up,
+              band= mean(scb_up-scb_low), sd=est_sd))
 }
 
 
