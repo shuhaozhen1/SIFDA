@@ -176,9 +176,9 @@ VCM_inference <- function(data, bstime=3000, h=NULL, h1=NULL, t_points, d=1, alp
 
   betahat <- est_VCM(data = data, t_points = t_points, h=h, d=d)
 
-  centerdata <- center_VCM(data = data, h=h,d=d)
+  centerdata <- center_VCM(data = data, h=h1,d=d)
 
-  xis <- localp_VCM_i(data=centerdata,h=h, h1=h1, t_points = t_points, d=d)
+  xis <- localp_VCM_i(data=centerdata,h=h1, h1=h1, t_points = t_points, d=d)
 
   xis_v <- lapply(xis, function(x){c(t(x))})
 
