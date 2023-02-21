@@ -74,7 +74,7 @@ center_VCM <- function(data,h=0.1,d=1){
 
 
 ### individual for VCM
-localp_t_VCM <- function(data_i,data,h=0.1,t,d=1){
+localp_t_VCM <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
   n<- length(data)
   p <- ncol(data[[1]])-2
   mis <- sapply(data, function(x){nrow(x)})
@@ -170,12 +170,15 @@ VCM_inference <- function(data, bstime=3000, h=NULL, h1=NULL, t_points, d=1, alp
     totalt <- Reduce(rbind,data)[,1]
     h <- bw.ucv(totalt)
   }
+  if(is.null(h1)){
+    h1 <- 0.6*h
+  }
 
   betahat <- est_VCM(data = data, t_points = t_points, h=h, d=d)
 
   centerdata <- center_VCM(data = data, h=h,d=d)
 
-  xis <- localp_VCM_i(data=centerdata,h=h, t_points = t_points, d=d)
+  xis <- localp_VCM_i(data=centerdata,h=h, h1=h1, t_points = t_points, d=d)
 
   xis_v <- lapply(xis, function(x){c(t(x))})
 
