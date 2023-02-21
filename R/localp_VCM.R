@@ -46,7 +46,7 @@ est_t_VCM <- function(data,h=0.1,t,d=1){
 #' est
 #'
 #' @export
-est_VCM <- function(data,t_points, h=0.1,d=1) {
+est_VCM <- function(data,t_points, h=0.1,d=1,h1=NULL) {
   est <- sapply(t_points, est_t_VCM,h=h,d=d, data=data)
   return(est)
 }
@@ -101,31 +101,38 @@ localp_t_VCM <- function(data_i,data,h=0.1,t,d=1){
     t(totalxp_design) %*% K_design %*% totalxp_design %*% solve(h_design)
     )
 
-    xt <- data_i[,1]
-    xp <- data_i[,2:(p+1)]
-    y <- data_i[, p+2]
+  xt <- data_i[,1]
+  xp <- data_i[,2:(p+1)]
+  y <- data_i[, p+2]
 
-    xp_design <- matrix(0,nrow = length(y), ncol= p*(d+1))
-    for(k in seq(1,by=d+1, length.out=p)){
+  xp_design <- matrix(0,nrow = length(y), ncol= p*(d+1))
+  for(k in seq(1,by=d+1, length.out=p)){
       for(i in 0:d)
         xp_design[,k+i] <- xp[,(k-1)/(d+1)+1] * (xt-t)^i
-    }
+  }
 
-    k_d <- diag(Epa_K((xt-t)/h)/h/length(y))
 
-    xi <- (solve(h_design)%*% denominator %*% solve(h_design)%*%
+  if(is.null(h1)){
+    h1 <- 0.6*h
+  }
+  h1_design <- diag(rep(1,p)) %x% diag((h1)^(0:d))
+
+  k_d <- diag(Epa_K((xt-t)/h1)/h1/length(y))
+
+
+  xi <- (solve(h1_design)%*% denominator %*% solve(h1_design)%*%
              t(xp_design) %*% k_d %*% y)[seq(1,by=d+1, length.out=p),]
 
   return(xi)
 }
 
-localp_ts_VCM <- function(data_i,data,h=0.1,t_points,d=1){
-  xi_t <- sapply(t_points, localp_t_VCM, data_i=data_i, data= data, h=h, d=d)
+localp_ts_VCM <- function(data_i,data,h=0.1,h1=NULL,t_points,d=1){
+  xi_t <- sapply(t_points, localp_t_VCM, data_i=data_i, data= data, h=h, h1=h1, d=d)
   return(xi_t)
 }
 
-localp_VCM_i <- function(data, h=0.1, t_points, d=1) {
-  xi <- lapply(X=data, localp_ts_VCM, data= data, h=h, t_points=t_points, d=d)
+localp_VCM_i <- function(data, h=0.1, h1=NULL, t_points, d=1) {
+  xi <- lapply(X=data, localp_ts_VCM, data= data, h=h, h1=h1, t_points=t_points, d=d)
   return(xi)
 }
 
@@ -154,25 +161,21 @@ localp_VCM_i <- function(data, h=0.1, t_points, d=1) {
 #' @importFrom MASS mvrnorm
 #' @export
 
-VCM_inference <- function(data, bstime=1000, h=NULL, h1=NULL, t_points, d=1, alpha = 0.05){
+VCM_inference <- function(data, bstime=3000, h=NULL, h1=NULL, t_points, d=1, alpha = 0.05){
 
   n <- length(data)
   p <- ncol(data[[1]])-2
 
   if(is.null(h)){
     totalt <- Reduce(rbind,data)[,1]
-    h <- bw.bcv(totalt)
+    h <- bw.ucv(totalt)
   }
 
   betahat <- est_VCM(data = data, t_points = t_points, h=h, d=d)
 
   centerdata <- center_VCM(data = data, h=h,d=d)
 
-  if(is.null(h1)){
-    h1 <- 0.8 * h
-  }
-
-  xis <- localp_VCM_i(data=centerdata,h=h1, t_points = t_points, d=d)
+  xis <- localp_VCM_i(data=centerdata,h=h, t_points = t_points, d=d)
 
   xis_v <- lapply(xis, function(x){c(t(x))})
 
