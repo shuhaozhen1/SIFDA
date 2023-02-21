@@ -66,7 +66,7 @@ center_Mean <- function(data,h=0.1,d=1){
 
 
 ### individual for Mean
-localp_t_Mean <- function(data_i,data,h=0.1,t,d=1){
+localp_t_Mean <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
   n<- length(data)
   p <- ncol(data[[1]])-1
   mis <- sapply(data, function(x){nrow(x)})
@@ -99,23 +99,29 @@ localp_t_Mean <- function(data_i,data,h=0.1,t,d=1){
     ti_design[,k] <- (ti-t)^(k-1)
   }
 
-  ki <- diag(Epa_K((ti-t)/h)/h/length(ti))
+  if(is.null(h1)){
+    h1 <- 0.5*h
+  }
 
-  ihat <- (solve(h_design) %*% denominator %*% solve(h_design)%*%
+  ki <- diag(Epa_K((ti-t)/h1)/h1/length(ti))
+
+  h1_design <- diag(h1^(0:d))
+
+  ihat <- (solve(h1_design) %*% denominator %*% solve(h1_design)%*%
            t(ti_design) %*% ki %*% ypi)[1,]
 
   return(ihat)
 }
 
 
-localp_ts_Mean <- function(data_i,data,h=0.1,t_points,d=1){
-  xi_t <- sapply(t_points, localp_t_Mean, data_i=data_i, data= data, h=h, d=d)
+localp_ts_Mean <- function(data_i,data,h=0.1,h1=NULL,t_points,d=1){
+  xi_t <- sapply(t_points, localp_t_Mean, data_i=data_i, data= data, h=h, h1=h1, d=d)
   return(xi_t)
 }
 
 
-localp_Mean_i <- function(data, h=0.1, t_points, d=1) {
-  xi <- lapply(X=data, localp_ts_Mean, data= data, h=h, t_points=t_points, d=d)
+localp_Mean_i <- function(data, h=0.1,h1=NULL, t_points, d=1) {
+  xi <- lapply(X=data, localp_ts_Mean, data= data, h=h, h1=h1, t_points=t_points, d=d)
   return(xi)
 }
 
@@ -148,7 +154,7 @@ localp_Mean_i <- function(data, h=0.1, t_points, d=1) {
 #' @importFrom MASS mvrnorm
 #'
 #' @export
-Mean_inference <- function(data, bstime=1000, h=NULL, t_points, d=1, alpha = 0.05){
+Mean_inference <- function(data, bstime=1000, h=NULL, h1=NULL, t_points, d=1, alpha = 0.05){
 
   n <- length(data)
   p <- ncol(data[[1]])-1
@@ -162,7 +168,11 @@ Mean_inference <- function(data, bstime=1000, h=NULL, t_points, d=1, alpha = 0.0
 
   centerdata <- center_Mean(data = data, h=h,d=d)
 
-  xis <- localp_Mean_i(data=centerdata,h= 0.8*h, t_points = t_points, d=d)
+  if(is.null(h1)){
+    h1 <- 0.5 * h
+  }
+
+  xis <- localp_Mean_i(data=centerdata,h= h1, t_points = t_points, d=d)
 
   xis_v <- lapply(xis, function(x){c(t(x))})
 
