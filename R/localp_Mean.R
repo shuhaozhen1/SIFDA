@@ -1,5 +1,10 @@
 est_t_Mean <- function(data,h=0.1,t,d=1){
   n<- length(data)
+
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   p <- ncol(data[[1]])-1
   mis <- sapply(data, function(x){nrow(x)})
 
@@ -42,11 +47,20 @@ est_t_Mean <- function(data,h=0.1,t,d=1){
 #'
 #' @export
 est_Mean <- function(data,t_points, h=0.1,d=1) {
+  n<- length(data)
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
   est <- sapply(t_points, est_t_Mean,h=h,d=d, data=data)
   return(est)
 }
 
 center_Mean <- function(data,h=0.1,d=1){
+  n<- length(data)
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   totaldata <- Reduce(rbind, data)
 
   totalt <- totaldata[,1]
@@ -68,6 +82,11 @@ center_Mean <- function(data,h=0.1,d=1){
 ### individual for Mean
 localp_t_Mean <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
   n<- length(data)
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
+
   p <- ncol(data[[1]])-1
   mis <- sapply(data, function(x){nrow(x)})
 
@@ -103,7 +122,12 @@ localp_t_Mean <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
     h1 <- 0.5*h
   }
 
-  ki <- diag(Epa_K((ti-t)/h1)/h1/length(ti))
+  epaki <- (Epa_K((ti-t)/h1)/h1/length(ti))
+  if( length(epaki) ==1 ){
+    ki <-  epaki
+  }else {
+    ki <- diag(epaki)
+  }
 
   h1_design <- diag(h1^(0:d))
 
@@ -115,12 +139,22 @@ localp_t_Mean <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
 
 
 localp_ts_Mean <- function(data_i,data,h=0.1,h1=NULL,t_points,d=1){
+  n<- length(data)
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   xi_t <- sapply(t_points, localp_t_Mean, data_i=data_i, data= data, h=h, h1=h1, d=d)
   return(xi_t)
 }
 
 
 localp_Mean_i <- function(data, h=0.1,h1=NULL, t_points, d=1) {
+  n<- length(data)
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   xi <- lapply(X=data, localp_ts_Mean, data= data, h=h, h1=h1, t_points=t_points, d=d)
   return(xi)
 }
@@ -157,6 +191,11 @@ localp_Mean_i <- function(data, h=0.1,h1=NULL, t_points, d=1) {
 Mean_inference <- function(data, bstime=1000, h=NULL, h1=NULL, t_points, d=1, alpha = 0.05){
 
   n <- length(data)
+
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   p <- ncol(data[[1]])-1
 
   if(is.null(h)){
@@ -167,6 +206,10 @@ Mean_inference <- function(data, bstime=1000, h=NULL, h1=NULL, t_points, d=1, al
   muhat <- est_Mean(data = data, t_points = t_points, h=h, d=d)
 
   centerdata <- center_Mean(data = data, h=h,d=d)
+
+  for(i in 1:n){if(is.matrix(centerdata[[i]])== F){
+    centerdata[[i]] <- matrix(centerdata[[i]],1)}
+  }
 
   if(is.null(h1)){
     h1 <- 0.5 * h

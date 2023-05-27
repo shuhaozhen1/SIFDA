@@ -20,7 +20,7 @@ generate_random_process_values <- function(time_points, meanf=function(x){0},
   if (distribution == "normal") {
     weights <- rnorm(num_basis)
   } else if (distribution == "uniform") {
-    weights <- runif(num_basis)
+    weights <- runif(num_basis)-0.5
   } else if (distribution == "exponential") {
     weights <- rexp(num_basis)-1
   } else {

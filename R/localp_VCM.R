@@ -1,5 +1,9 @@
 est_t_VCM <- function(data,h=0.1,t,d=1){
   n<- length(data)
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   p <- ncol(data[[1]])-2
   mis <- sapply(data, function(x){nrow(x)})
 
@@ -12,6 +16,7 @@ est_t_VCM <- function(data,h=0.1,t,d=1){
   h_design <- diag(rep(1,p)) %x% diag(h^(0:d))
 
   totalxp_design <- matrix(0,nrow = nrow(totaldata), ncol= p*(d+1))
+
   for(k in seq(1,by=d+1, length.out=p)){
     for(i in 0:d)
       totalxp_design[,k+i] <- totalxp[,(k-1)/(d+1)+1] * (totalt-t)^i
@@ -46,7 +51,7 @@ est_t_VCM <- function(data,h=0.1,t,d=1){
 #' est
 #'
 #' @export
-est_VCM <- function(data,t_points, h=0.1,d=1,h1=NULL) {
+est_VCM <- function(data,t_points, h=0.1,d=1) {
   est <- sapply(t_points, est_t_VCM,h=h,d=d, data=data)
   return(est)
 }
@@ -55,12 +60,18 @@ est_VCM <- function(data,t_points, h=0.1,d=1,h1=NULL) {
 ### center data
 
 center_VCM <- function(data,h=0.1,d=1){
+  n<- length(data)
+
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   totaldata <- Reduce(rbind, data)
   totalxp <- totaldata[,2:(ncol(totaldata)-1)]
 
   mis <- sapply(data, function(x){nrow(x)})
 
-  estbeta <- t(est_VCM(data=data, t_points = totaldata[,1]))
+  estbeta <- t(est_VCM(data=data, t_points = totaldata[,1], h=h, d=d))
 
   epsilon <- totaldata[,ncol(totaldata)] - rowSums(estbeta * totalxp)
 
@@ -76,6 +87,11 @@ center_VCM <- function(data,h=0.1,d=1){
 ### individual for VCM
 localp_t_VCM <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
   n<- length(data)
+
+  for(i in 1:n){if(is.matrix(data[[i]])== F){
+    data[[i]] <- matrix(data[[i]],1)}
+  }
+
   p <- ncol(data[[1]])-2
   mis <- sapply(data, function(x){nrow(x)})
 
@@ -103,6 +119,9 @@ localp_t_VCM <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
 
   xt <- data_i[,1]
   xp <- data_i[,2:(p+1)]
+  if(is.matrix(xp)==F){
+    xp <- matrix(xp,1)
+  }
   y <- data_i[, p+2]
 
   xp_design <- matrix(0,nrow = length(y), ncol= p*(d+1))
@@ -117,8 +136,12 @@ localp_t_VCM <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
   }
   h1_design <- diag(rep(1,p)) %x% diag((h1)^(0:d))
 
-  k_d <- diag(Epa_K((xt-t)/h1)/h1/length(y))
-
+  epaki <- (Epa_K((xt- t)/h1)/h1/length(xt))
+  if( length(epaki) ==1 ){
+    k_d <-  epaki
+  }else {
+    k_d <- diag(epaki)
+  }
 
   xi <- (solve(h1_design)%*% denominator %*% solve(h1_design)%*%
              t(xp_design) %*% k_d %*% y)[seq(1,by=d+1, length.out=p),]
@@ -177,6 +200,10 @@ VCM_inference <- function(data, bstime=3000, h=NULL, h1=NULL, t_points, d=1, alp
   betahat <- est_VCM(data = data, t_points = t_points, h=h, d=d)
 
   centerdata <- center_VCM(data = data, h=h1,d=d)
+
+  for(i in 1:n){if(is.matrix(centerdata[[i]])== F){
+    centerdata[[i]] <- matrix(centerdata[[i]],1)}
+  }
 
   xis <- localp_VCM_i(data=centerdata,h=h1, h1=h1, t_points = t_points, d=d)
 
