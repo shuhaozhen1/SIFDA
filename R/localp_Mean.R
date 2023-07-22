@@ -82,7 +82,7 @@ center_Mean <- function(data,h=0.1,d=1){
 ### individual for Mean
 localp_t_Mean <- function(data_i,data,h=0.1,h1=NULL,t,d=1){
 
-  n<- length(data)
+  n <- length(data)
   for(i in 1:n){if(is.matrix(data[[i]])== F){
     data[[i]] <- matrix(data[[i]],1)}
   }
